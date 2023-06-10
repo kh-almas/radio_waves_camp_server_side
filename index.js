@@ -42,6 +42,15 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
+        const classCollection = client.db("RadioWavesCamp").collection("class");
+
+        app.post('/class', async (req, res) => {
+            const data = req.body;
+            console.log(data);
+            const result = await classCollection.insertOne(data);
+            res.send(result);
+        })
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
