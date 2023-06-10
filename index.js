@@ -44,6 +44,11 @@ async function run() {
     try {
         const classCollection = client.db("RadioWavesCamp").collection("class");
 
+        app.get('/class', async (req, res) => {
+            const result = await classCollection.find().toArray();
+            res.send(result);
+        })
+
         app.post('/class', async (req, res) => {
             const data = req.body;
             console.log(data);
