@@ -11,8 +11,9 @@ app.use(express.json());
 
 app.post('/jwt', (req, res) => {
     const user = req.body;
-    const result = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-    res.send(result);
+    // console.log(user);
+    const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    res.send({token: token});
 })
 
 const verifyJWT = (req, res, next) => {
@@ -58,19 +59,28 @@ async function run() {
 
         app.post('/users', async (req, res) => {
             const data = req.body;
-            console.log(data);
             const result = await usersCollection.insertOne(data);
             res.send(result);
         })
 
-        app.get('/class', async (req, res) => {
-            const result = await classCollection.find().toArray();
-            res.send(result);
+        app.get('/my-class/:email',verifyJWT , async (req, res) => {
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            console.log(TokenData.email)
+            console.log(urlParams)
+            if(TokenData === urlParams){
+                const query = {instructorEmail: urlParams};
+
+                const result = await classCollection.find(query).toArray();
+                res.send(result);
+            }else{
+                return res.status(407).send({error: true, message: "unauthorized access"});
+            }
+
         })
 
         app.post('/class', async (req, res) => {
             const data = req.body;
-            console.log(data);
             const result = await classCollection.insertOne(data);
             res.send(result);
         })
@@ -79,7 +89,7 @@ async function run() {
             const data = req.params.id;
             const query = {_id: new ObjectId(data)};
 
-            console.log(query);
+            // console.log(query);
             const result = await classCollection.deleteOne(query);
             res.send(result);
         })
