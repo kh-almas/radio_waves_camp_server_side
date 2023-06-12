@@ -40,9 +40,28 @@ const client = new MongoClient(uri, {
     }
 });
 
+const verifyAdmin = async (req, res, next) => {
+    const email = req.decoded.email;
+    const query = { email: email }
+    const user = await usersCollection.findOne(query);
+    if (user?.role !== 'admin') {
+        return res.status(403).send({ error: true, message: 'porbidden message' });
+    }
+    next();
+}
+
 async function run() {
     try {
+        const usersCollection = client.db("RadioWavesCamp").collection("users");
         const classCollection = client.db("RadioWavesCamp").collection("class");
+
+
+        app.post('/users', async (req, res) => {
+            const data = req.body;
+            console.log(data);
+            const result = await usersCollection.insertOne(data);
+            res.send(result);
+        })
 
         app.get('/class', async (req, res) => {
             const result = await classCollection.find().toArray();
@@ -53,6 +72,15 @@ async function run() {
             const data = req.body;
             console.log(data);
             const result = await classCollection.insertOne(data);
+            res.send(result);
+        })
+
+        app.delete('/class/:id', async (req, res) => {
+            const data = req.params.id;
+            const query = {_id: new ObjectId(data)};
+
+            console.log(query);
+            const result = await classCollection.deleteOne(query);
             res.send(result);
         })
 
