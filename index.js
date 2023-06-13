@@ -108,6 +108,7 @@ async function run() {
                     price: data.price,
                     img: data.img,
                     des: data.des,
+                    feedback: '',
                 }
             };
             const result = await classCollection.updateOne(query, update);
@@ -151,6 +152,59 @@ async function run() {
                 }
             };
             const result = await usersCollection.updateOne(query, update);
+            res.send(result);
+        })
+
+        // For admin
+        app.get('/all-class/:email', verifyJWT , async (req, res) => {
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            if(TokenData === urlParams){
+                const result = await classCollection.find().toArray();
+                res.send(result);
+            }else{
+                return res.status(401).send({error: true, message: "unauthorized access"});
+            }
+
+        })
+
+        // For admin
+        app.put('/approve-class/:id/:email', verifyJWT , async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            if(TokenData !== urlParams){
+                return res.status(401).send({error: true, message: "unauthorized access"});
+            }
+            const query = {_id: new ObjectId(id)};
+            const update = {
+                $set: {
+                    status: data.status,
+                    feedback: data.feedback,
+                }
+            };
+            const result = await classCollection.updateOne(query, update);
+            res.send(result);
+        })
+
+        // For admin
+        app.put('/feedback-class/:id/:email', verifyJWT , async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            if(TokenData !== urlParams){
+                return res.status(401).send({error: true, message: "unauthorized access"});
+            }
+            const query = {_id: new ObjectId(id)};
+            const update = {
+                $set: {
+                    feedback: data.feedback,
+                    status: data.status,
+                }
+            };
+            const result = await classCollection.updateOne(query, update);
             res.send(result);
         })
 
