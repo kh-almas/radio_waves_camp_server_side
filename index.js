@@ -63,20 +63,23 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/my-class/:email',verifyJWT , async (req, res) => {
+        app.get('/my-class/:email', verifyJWT , async (req, res) => {
             const TokenData = req.decoded.email;
             const urlParams = req.params.email;
-            console.log(TokenData.email)
-            console.log(urlParams)
             if(TokenData === urlParams){
-                const query = {instructorEmail: urlParams};
-
-                const result = await classCollection.find(query).toArray();
+                const result = await classCollection.find({instructorEmail: urlParams}).toArray();
                 res.send(result);
             }else{
                 return res.status(407).send({error: true, message: "unauthorized access"});
             }
 
+        })
+
+        app.get('/class/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)};
+            const result = await classCollection.findOne(query);
+            res.send(result);
         })
 
         app.post('/class', async (req, res) => {
@@ -85,11 +88,31 @@ async function run() {
             res.send(result);
         })
 
+        app.put('/class/:id/:email', verifyJWT , async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            if(TokenData !== urlParams){
+                return res.status(407).send({error: true, message: "unauthorized access"});
+            }
+            const query = {_id: new ObjectId(id)};
+            const update = {
+                $set: {
+                    className: data.className,
+                    availableSeats: data.availableSeats,
+                    price: data.price,
+                    img: data.img,
+                    des: data.des,
+                }
+            };
+            const result = await classCollection.updateOne(query, update);
+            res.send(result);
+        })
+
         app.delete('/class/:id', async (req, res) => {
             const data = req.params.id;
             const query = {_id: new ObjectId(data)};
-
-            // console.log(query);
             const result = await classCollection.deleteOne(query);
             res.send(result);
         })
