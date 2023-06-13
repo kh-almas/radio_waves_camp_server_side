@@ -56,13 +56,14 @@ async function run() {
         const usersCollection = client.db("RadioWavesCamp").collection("users");
         const classCollection = client.db("RadioWavesCamp").collection("class");
 
-
+        //store user data
         app.post('/users', async (req, res) => {
             const data = req.body;
             const result = await usersCollection.insertOne(data);
             res.send(result);
         })
 
+        // For instructor
         app.get('/my-class/:email', verifyJWT , async (req, res) => {
             const TokenData = req.decoded.email;
             const urlParams = req.params.email;
@@ -75,6 +76,7 @@ async function run() {
 
         })
 
+        // For instructor
         app.get('/class/:id', async (req, res) => {
             const id = req.params.id;
             const query = {_id: new ObjectId(id)};
@@ -82,19 +84,21 @@ async function run() {
             res.send(result);
         })
 
+        // For instructor
         app.post('/class', async (req, res) => {
             const data = req.body;
             const result = await classCollection.insertOne(data);
             res.send(result);
         })
 
+        // For instructor
         app.put('/class/:id/:email', verifyJWT , async (req, res) => {
             const id = req.params.id;
             const data = req.body;
             const TokenData = req.decoded.email;
             const urlParams = req.params.email;
             if(TokenData !== urlParams){
-                return res.status(407).send({error: true, message: "unauthorized access"});
+                return res.status(401).send({error: true, message: "unauthorized access"});
             }
             const query = {_id: new ObjectId(id)};
             const update = {
@@ -110,12 +114,46 @@ async function run() {
             res.send(result);
         })
 
+        // For instructor
         app.delete('/class/:id', async (req, res) => {
             const data = req.params.id;
             const query = {_id: new ObjectId(data)};
             const result = await classCollection.deleteOne(query);
             res.send(result);
         })
+
+        // For admin
+        app.get('/all-users', async (req, res) => {
+            const result = await usersCollection.find().toArray();
+            res.send(result);
+        })
+
+        // For admin
+        app.put('/set-role/:id/:email', verifyJWT , async (req, res) => {
+            const id = req.params.id;
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            const data = req.body;
+
+            // last admin can not change his role
+            const role = await usersCollection.find({role: "admin"}).toArray();
+            const roleCount = role.length;
+            if((data.role === "instructor" || data.role === "user") && roleCount < 2){
+                return res.status(344).send({error: true, message: "Last admin should not change his role"});
+            }
+            if(TokenData !== urlParams){
+                return res.status(401).send({error: true, message: "unauthorized access"});
+            }
+            const query = {_id: new ObjectId(id)};
+            const update = {
+                $set: {
+                    role: data.role,
+                }
+            };
+            const result = await usersCollection.updateOne(query, update);
+            res.send(result);
+        })
+
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
