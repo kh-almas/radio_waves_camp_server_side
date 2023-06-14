@@ -58,6 +58,19 @@ async function run() {
         const cartCollection = client.db("RadioWavesCamp").collection("cart");
         const enrollCollection = client.db("RadioWavesCamp").collection("enroll");
 
+        // enrolled class by student
+        app.get('/enrolled-class/:email', verifyJWT , async (req, res) => {
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            if(TokenData === urlParams){
+                const query = {studentEmail: urlParams}
+                const result = await enrollCollection.find(query).toArray();
+                res.send(result);
+            }else{
+                return res.status(401).send({error: true, message: "unauthorized access"});
+            }
+
+        })
         // all instructor
         app.get('/all-instructor/:email', verifyJWT , async (req, res) => {
             const TokenData = req.decoded.email;
