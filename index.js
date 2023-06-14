@@ -58,6 +58,44 @@ async function run() {
         const cartCollection = client.db("RadioWavesCamp").collection("cart");
         const enrollCollection = client.db("RadioWavesCamp").collection("enroll");
 
+        // all instructor
+        app.get('/all-instructor/:email', verifyJWT , async (req, res) => {
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            if(TokenData === urlParams){
+                const query = {role: "instructor"}
+                const result = await usersCollection.find(query).toArray();
+                res.send(result);
+            }else{
+                return res.status(401).send({error: true, message: "unauthorized access"});
+            }
+
+        })
+
+        //get popular class data
+        app.get('/popular-class/:email', verifyJWT , async (req, res) => {
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            if(TokenData !== urlParams){
+                return res.status(401).send({error: true, message: "unauthorized access"});
+            }
+            const sort = {enroll: -1};
+            const result = await classCollection.find().sort(sort).toArray();
+            res.send(result);
+        })
+
+        //get popular instructor data
+        app.get('/popular-instructor/:email', verifyJWT , async (req, res) => {
+            const TokenData = req.decoded.email;
+            const urlParams = req.params.email;
+            if(TokenData !== urlParams){
+                return res.status(401).send({error: true, message: "unauthorized access"});
+            }
+            const sort = {enroll: -1};
+            const result = await usersCollection.find().sort(sort).toArray();
+            res.send(result);
+        })
+
         // logged in user data
         app.get('/loged-in-data/:email', async (req, res) => {
             const userEmail = req.params.email;
@@ -265,7 +303,7 @@ async function run() {
             res.send(result);
         })
 
-        // For admin
+        // For admin && all classes
         app.get('/all-class/:email', verifyJWT , async (req, res) => {
             const TokenData = req.decoded.email;
             const urlParams = req.params.email;
