@@ -55,6 +55,15 @@ async function run() {
     try {
         const usersCollection = client.db("RadioWavesCamp").collection("users");
         const classCollection = client.db("RadioWavesCamp").collection("class");
+        const cartCollection = client.db("RadioWavesCamp").collection("cart");
+
+        // logged in user data
+        app.get('/loged-in-data/:email', async (req, res) => {
+            const userEmail = req.params.email;
+            const query = {email: userEmail}
+            const result = await usersCollection.findOne(query);
+            res.send(result);
+        })
 
         // get data for all class page
         app.get('/approved-class', async (req, res) => {
@@ -66,7 +75,22 @@ async function run() {
         //store user data
         app.post('/users', async (req, res) => {
             const data = req.body;
+            //// need to upsert
             const result = await usersCollection.insertOne(data);
+            res.send(result);
+        })
+
+        //cart data
+        app.post('/cart', async (req, res) => {
+            const data = req.body;
+            const update = {
+                $set: {
+                    className: data.className,
+                    studentEmail: data.studentEmail,
+                }
+            };
+            const options = { upsert: true };
+            const result = await cartCollection.updateOne(data, update, options);
             res.send(result);
         })
 
