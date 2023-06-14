@@ -56,6 +56,13 @@ async function run() {
         const usersCollection = client.db("RadioWavesCamp").collection("users");
         const classCollection = client.db("RadioWavesCamp").collection("class");
 
+        // get data for all class page
+        app.get('/approved-class', async (req, res) => {
+            const query = {status: "approved"}
+            const result = await classCollection.find(query).toArray();
+            res.send(result);
+        })
+
         //store user data
         app.post('/users', async (req, res) => {
             const data = req.body;
