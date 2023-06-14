@@ -130,16 +130,17 @@ async function run() {
         })
 
         // For admin
-        app.put('/set-role/:id/:email', verifyJWT , async (req, res) => {
+        app.put('/set-role/:id/:email/:currentRole', verifyJWT , async (req, res) => {
             const id = req.params.id;
             const TokenData = req.decoded.email;
             const urlParams = req.params.email;
+            const currentRole = req.params.currentRole;
             const data = req.body;
 
             // last admin can not change his role
             const role = await usersCollection.find({role: "admin"}).toArray();
             const roleCount = role.length;
-            if((data.role === "instructor" || data.role === "user") && roleCount < 2){
+            if(currentRole === "admin" && roleCount < 2){
                 return res.status(344).send({error: true, message: "Last admin should not change his role"});
             }
             if(TokenData !== urlParams){
